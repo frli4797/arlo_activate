@@ -3,6 +3,7 @@
 	<name>Arlo_activate_3</name>
 	<comment></comment>
 	<projects>
+		<project>sectoralarm</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
