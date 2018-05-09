@@ -13,6 +13,7 @@ import sectoralarm
 def __printMessage():
     print('Usage: annex_activate [-f]')
     print('-f force arming of annex')
+    print('-n sends notification e-mail if the annex was armed.')
     print('-h this message')
 
 def __optionalArm(activator, status, logging):
@@ -36,6 +37,17 @@ class AnnexActivator:
         
         self.alarm = sectoralarm.connect(self.alarm_email, self.alarm_password, self.alarm_siteId, self.alarm_panel_code)
   
+    def emailNotify(self, subject, message):
+        if sys.platform.startswith('linux'):
+            from email.mime.text import MIMEText
+            from subprocess import Popen, PIPE
+            msg = MIMEText(message)
+            msg["From"] = "monitor@jagare-lilja.se"
+            msg["To"] = "fredrik@jagare-lilja.se"
+            msg["Subject"] = subject
+            p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+            p.communicate(msg.as_string())
+
 
     def get_status(self):
         current_status = self.alarm.status()
@@ -51,8 +63,11 @@ class AnnexActivator:
     
         return last_event
     
-    def arm_annex(self):
+    def arm_annex(self, notify = False):
         self.alarm.arm_annex()
+        if notify:
+            self.emailNotify("Annex armed","The annex was armed.")
+        
 
 if __name__ == '__main__':
     activator = AnnexActivator()
@@ -60,8 +75,12 @@ if __name__ == '__main__':
     logging.debug("Alarm status is " + status['AlarmStatus'])
     logging.debug("Annex status is " + status['StatusAnnex'])
     arguments= sys.argv[1:]
+    
+    notify = False
+    optional = True
+    
     try:
-        opts, args= getopt.getopt(sys.argv[1:], 'hf', '')
+        opts, args= getopt.getopt(sys.argv[1:], 'hnf', '')
     except getopt.GetoptError:
         __printMessage()
         sys.exit(2)
@@ -69,6 +88,13 @@ if __name__ == '__main__':
         if opt == '-h':
             __printMessage()
         elif opt == '-f':
-            activator.arm_annex()
+            optional = False
+        elif opt =='-n':
+            notify = True
         else:
-            __optionalArm(activator, status, logging)
+            optional = True
+    
+    if optional:
+            __optionalArm(activator, status, notify)
+    else:
+            activator.arm_annex(notify)
