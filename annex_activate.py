@@ -21,6 +21,18 @@ def __optionalArm(activator, status, logging):
         if activator.get_last_event() == 'armed':
             logging.info('Arming annex')
             activator.arm_annex()
+            
+def emailNotify(self, subject, message):
+    if sys.platform.startswith('linux'):
+        from email.mime.text import MIMEText
+        from subprocess import Popen, PIPE
+        msg = MIMEText(message)
+        msg["From"] = "monitor@jagare-lilja.se"
+        msg["To"] = "fredrik@jagare-lilja.se"
+        msg["Subject"] = subject
+        p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+        p.communicate(msg.as_string().encode())
+
 
 class AnnexActivator:
     
@@ -36,18 +48,6 @@ class AnnexActivator:
         self.alarm_panel_code = config.get('Alarm', 'panel_code')
         
         self.alarm = sectoralarm.connect(self.alarm_email, self.alarm_password, self.alarm_siteId, self.alarm_panel_code)
-  
-    def emailNotify(self, subject, message):
-        if sys.platform.startswith('linux'):
-            from email.mime.text import MIMEText
-            from subprocess import Popen, PIPE
-            msg = MIMEText(message)
-            msg["From"] = "monitor@jagare-lilja.se"
-            msg["To"] = "fredrik@jagare-lilja.se"
-            msg["Subject"] = subject
-            p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
-            p.communicate(msg.as_string())
-
 
     def get_status(self):
         current_status = self.alarm.status()
@@ -66,7 +66,7 @@ class AnnexActivator:
     def arm_annex(self, notify = False):
         self.alarm.arm_annex()
         if notify:
-            self.emailNotify("Annex armed","The annex was armed.")
+            emailNotify("Annex armed","The annex was armed.")
         
 
 if __name__ == '__main__':
