@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sys
+import os
 import getopt
 import configparser
 import logging
@@ -22,7 +23,7 @@ def __optionalArm(activator, status, logging):
             logging.info('Arming annex')
             activator.arm_annex()
             
-def emailNotify(self, subject, message):
+def emailNotify(subject, message):
     if sys.platform.startswith('linux'):
         from email.mime.text import MIMEText
         from subprocess import Popen, PIPE
@@ -41,7 +42,9 @@ class AnnexActivator:
         config = configparser.ConfigParser()
         config.read('config.cfg')
         numeric_level = getattr(logging, config.get('Logging', 'level').upper(), None)
-        logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename='annex_activate.log', level=numeric_level)
+        log_location = config.get('Logging', 'log_location')
+        logfile = os.path.join(log_location, 'arlo_activate.log')
+        logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=logfile, level=numeric_level)
         self.alarm_email = config.get('Alarm', 'email')
         self.alarm_password = config.get('Alarm', 'password')
         self.alarm_siteId = config.get('Alarm', 'siteId')
