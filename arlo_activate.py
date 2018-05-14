@@ -7,6 +7,7 @@ import os
 import configparser
 
 import sectoralarm
+import annex_activate
 
 
 class AlarmState:
@@ -75,7 +76,7 @@ class ArloActivator:
             base.update()
         else:
             logging.debug("Mode not set")
-
+            
 if __name__ == '__main__':
     activator = ArloActivator()
     
@@ -88,6 +89,8 @@ if __name__ == '__main__':
         if status.state['AlarmStatus'] == 'armed':
             logging.info('Changing state of Arlo to [armed].')
             activator.set_arlo_mode('armed')
+            annex_activate.emailNotify('Arlo armed', 'Changing state of Arlo to [armed].')
         else:
             logging.info('Changing state of Arlo to [schedule].')
             activator.set_arlo_mode('schedule')
+            annex_activate.emailNotify('Arlo armed', 'Changing state of Arlo to [armed].')
