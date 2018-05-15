@@ -5,6 +5,7 @@ import logging
 import tempfile
 import os
 import configparser
+import sys
 
 import sectoralarm
 import annex_activate
@@ -68,12 +69,17 @@ class ArloActivator:
     
         from pyarlo import PyArlo
         arlo  = PyArlo(self.arlo_email, self.arlo_password)
-    
+        
+        if arlo == None or arlo.base_stations == None:
+            logging.error('Could not read arlo mode.')
+            return
+        
         base = arlo.base_stations[0]
+
         logging.info("Is mode " + base.mode)
     
         if base.mode != mode_name:
-            print("Setting mode " + mode_name)
+            logging.info("Setting mode " + mode_name)
             base.mode = mode_name
             base.update()
         else:
@@ -82,8 +88,14 @@ class ArloActivator:
 if __name__ == '__main__':
     activator = ArloActivator()
     
-    status = activator.get_alarm_status()
-    logging.debug("Alarm status is " + status.state['AlarmStatus'])
+    status = 'none' 
+    
+    try:
+        status = activator.get_alarm_status()
+        logging.debug("Alarm status is " + status.state['AlarmStatus'])
+    except:
+        logging.error("Could not read status.", exc_info=True)
+        sys.exit(1)
     
     if status.dirty == False:
         logging.debug('Not dirty. Doing nothing.')

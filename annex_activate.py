@@ -9,19 +9,11 @@ import logging
 import sectoralarm
 
 
-
-
 def __printMessage():
     print('Usage: annex_activate [-f]')
     print('-f force arming of annex')
     print('-n sends notification e-mail if the annex was armed.')
     print('-h this message')
-
-def __optionalArm(activator, status, logging):
-    if (status['AlarmStatus'] == 'armed') and (status['StatusAnnex'] == 'disarmed'):
-        if activator.get_last_event() == 'armed':
-            logging.info('Arming annex')
-            activator.arm_annex()
             
 def emailNotify(subject, message):
     if sys.platform.startswith('linux'):
@@ -43,8 +35,9 @@ class AnnexActivator:
         config.read('config.cfg')
         numeric_level = getattr(logging, config.get('Logging', 'level').upper(), None)
         log_location = config.get('Logging', 'log_location')
-        logfile = os.path.join(log_location, 'arlo_activate.log')
+        logfile = os.path.join(log_location, 'annex_activate.log')
         logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', datefmt='%Y-%m-%d %H:%M:%S', filename=logfile, level=numeric_level)
+        logging.debug('Starting')
         self.alarm_email = config.get('Alarm', 'email')
         self.alarm_password = config.get('Alarm', 'password')
         self.alarm_siteId = config.get('Alarm', 'siteId')
@@ -59,22 +52,41 @@ class AnnexActivator:
     
     
     def get_last_event(self):
-        event_log = self.alarm.event_log()
+        last_event = ''
+        try:
+            event_log = self.alarm.event_log()
+            last_event = event_log[0]['EventType'] 
+            logging.debug('Retrieved last event [' + last_event )
+        except:
+            logging.error('Could not get last event.', exc_info=True)
 
-        last_event = event_log[0]['EventType'] 
-        logging.debug('Retrieved last event [' + last_event )
-    
         return last_event
     
     def arm_annex(self, notify = False):
-        self.alarm.arm_annex()
-        if notify:
-            emailNotify("Annex armed","The annex was armed.")
-        
+        try:
+            self.alarm.arm_annex()
+            if notify:
+                emailNotify("Annex armed","The annex was armed.")
+        except:
+            logging.error('Could not arm annex.', exc_info=True)
+    
+    def optionalArm(self, status, notify):
+        if (status['AlarmStatus'] == 'armed') and (status['StatusAnnex'] == 'disarmed'):
+            if activator.get_last_event() == 'armed':
+                logging.info('Arming annex')
+                self.arm_annex(notify)   
 
 if __name__ == '__main__':
     activator = AnnexActivator()
-    status = activator.get_status()
+
+    status = {}
+    
+    try:
+        status = activator.get_status()
+    except:
+        logging.error('Could not get status from Alarm.', exc_info=True)
+        sys.exit(1)
+    
     logging.debug("Alarm status is " + status['AlarmStatus'])
     logging.debug("Annex status is " + status['StatusAnnex'])
     arguments= sys.argv[1:]
@@ -96,8 +108,11 @@ if __name__ == '__main__':
             notify = True
         else:
             optional = True
-    
-    if optional:
-            __optionalArm(activator, status, notify)
-    else:
+    try:
+        if optional:
+            activator.optionalArm(status, notify)
+        else:
             activator.arm_annex(notify)
+    except:
+        logging.error('Something went wrong.', exc_info=True)
+        sys.exit(1)
