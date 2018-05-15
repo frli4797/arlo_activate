@@ -42,9 +42,10 @@ class ArloActivator:
         status_file = os.path.join(tempfile.gettempdir(), 'alarm_state')
         logging.debug('Tempfile ' + status_file)
         current_status = self.alarm.status()
+        logging.debug(json.dumps(current_status))
         
         if current_status['AlarmStatus'] not in {'armed', 'disarmed'} or \
-            current_status['AnnexStatus'] not in {'armed', 'disarmed'}:
+            current_status['StatusAnnex'] not in {'armed', 'disarmed'}:
             logging.error("Alarm status is " + current_status['AlarmStatus'])
             logging.error("Annex status is " + current_status['StatusAnnex'])
             raise ValueError('Returned status from alarm is not valid.' )
