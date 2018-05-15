@@ -47,6 +47,12 @@ class AnnexActivator:
 
     def get_status(self):
         current_status = self.alarm.status()
+       
+        if current_status['AlarmStatus'] not in {'armed', 'disarmed'} or \
+            current_status['AnnexStatus'] not in {'armed', 'disarmed'}:
+            logging.error("Alarm status is " + current_status['AlarmStatus'])
+            logging.error("Annex status is " + current_status['StatusAnnex'])
+            raise ValueError('Returned status from alarm is not valid.' )
         
         return current_status
     
@@ -79,7 +85,7 @@ class AnnexActivator:
 if __name__ == '__main__':
     activator = AnnexActivator()
 
-    status = {}
+    status = None
     
     try:
         status = activator.get_status()
