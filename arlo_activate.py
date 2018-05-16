@@ -73,24 +73,34 @@ class ArloActivator:
             logging.debug('Setting to dirty.')       
             return AlarmState(True, current_status)
     
+    
+    def get_arlo_mode(self):
+        from pyarlo import PyArlo
+        arlo  = PyArlo(self.arlo_email, self.arlo_password)
+        
+        if arlo == None or arlo.base_stations == None:
+            logging.error('Could not read arlo mode.')
+            return
+        
+        base = arlo.base_stations[0]
+
+        arlo_mode = base.mode
+        logging.info("Is mode " + arlo_mode)
+        return arlo_mode
+    
     def set_arlo_mode(self, mode_name):
         try:
             from pyarlo import PyArlo
             arlo  = PyArlo(self.arlo_email, self.arlo_password)
-            
-            if arlo == None or arlo.base_stations == None:
-                logging.error('Could not read arlo mode.')
-                return
-            
+ 
             base = arlo.base_stations[0]
-    
-            arlo_mode = base.mode
-            logging.info("Is mode " + arlo_mode)
+            arlo_mode = self.get_arlo_mode()
         
             if arlo_mode != mode_name:
-                logging.info("Setting mode " + mode_name)
+                logging.info("Setting Arlo mode to " + mode_name)
                 base.mode = mode_name
                 base.update()
+                self.emailNotify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
             else:
                 logging.debug("Mode not set")
         except TypeError:
@@ -99,23 +109,19 @@ class ArloActivator:
 if __name__ == '__main__':
     activator = ArloActivator()
     
-    status = 'none' 
+    alarm_status = 'none' 
     
     try:
-        status = activator.get_alarm_status()
-        logging.debug("Alarm status is " + status.state['AlarmStatus'])
+        alarm_status = activator.get_alarm_status()
+        logging.debug("Alarm status is " + alarm_status.state['AlarmStatus'])
     except:
         logging.error("Could not read status.", exc_info=True)
         sys.exit(1)
     
-    if status.dirty == False:
+    if alarm_status.dirty == False:
         logging.debug('Not dirty. Doing nothing.')
     else:
-        if status.state['AlarmStatus'] == 'armed':
-            logging.info('Changing state of Arlo to [armed].')
+        if alarm_status.state['AlarmStatus'] == 'armed':
             activator.set_arlo_mode('armed')
-            annex_activate.emailNotify('Alarm armed', 'Changing state of Arlo to [armed].')
         else:
-            logging.info('Changing state of Arlo to [schedule].')
             activator.set_arlo_mode('schedule')
-            annex_activate.emailNotify('Alarm disarmed', 'Changing state of Arlo to [schedule].')
