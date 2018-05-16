@@ -8,7 +8,6 @@ import configparser
 import sys
 
 import sectoralarm
-import annex_activate
 
 
 class AlarmState:
