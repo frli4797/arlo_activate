@@ -13,6 +13,7 @@ import json
 def __printMessage():
     print('Usage: annex_activate [-f]')
     print('-f force arming of annex')
+    print('-r checks if Annex is armed. If not armed sends a reminder.')
     print('-n sends notification e-mail if the annex was armed.')
     print('-h this message')
             
@@ -102,9 +103,10 @@ if __name__ == '__main__':
     
     notify = False
     optional = True
+    remind = False
     
     try:
-        opts, args= getopt.getopt(sys.argv[1:], 'hnf', '')
+        opts, args= getopt.getopt(sys.argv[1:], 'hnfr', '')
     except getopt.GetoptError:
         __printMessage()
         sys.exit(2)
@@ -115,10 +117,16 @@ if __name__ == '__main__':
             optional = False
         elif opt =='-n':
             notify = True
+        elif opt == '-r':
+            remind = True
         else:
             optional = True
+            
     try:
-        if optional:
+        if remind and activator.get_status() != 'armed':
+            emailNotify('Reminder: annex not Armed', 'Remember to arm the Annex.')
+            sys.exit(0)
+        elif optional:
             activator.optionalArm(status, notify)
         else:
             activator.arm_annex(notify)
