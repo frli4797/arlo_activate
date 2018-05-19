@@ -10,6 +10,7 @@ import sys
 import sectoralarm
 
 
+
 class AlarmState:
     dirty = False
     state = ""
@@ -34,7 +35,7 @@ class ArloActivator:
         self.arlo_password = config.get('Arlo', 'password')
         
         self.alarm = sectoralarm.connect(self.alarm_email, self.alarm_password, self.alarm_siteId, self.alarm_panel_code)
-
+        self.arlo = None
         
     def get_alarm_status(self):
         
@@ -54,9 +55,11 @@ class ArloActivator:
         if os.path.isfile(status_file):    
             with open(status_file, 'r+') as result_file:
                     saved_status = json.load(result_file)
+                    result_file.seek(0)
                     result_file.truncate()
-                    result_file.close# result_file.truncate()
-                    logging.debug('Stored status: ' + saved_status['AlarmStatus'])  
+                    json.dump(current_status, result_file)
+                    result_file.close
+                    logging.debug('New stored status: ' + saved_status['AlarmStatus'])  
         else:
             with open(status_file, 'w') as result_file:
                     json.dump(current_status, result_file)
@@ -73,9 +76,16 @@ class ArloActivator:
             return AlarmState(True, current_status)
     
     
+
+    def __getArlo(self):
+        if(self.arlo == None):
+            from pyarlo import PyArlo
+            self.arlo = PyArlo(self.arlo_email, self.arlo_password)
+            logging.debug('Lazy loading Arlo')
+        return self.arlo
+
     def get_arlo_mode(self):
-        from pyarlo import PyArlo
-        arlo  = PyArlo(self.arlo_email, self.arlo_password)
+        arlo = self.__getArlo()
         
         if arlo == None or arlo.base_stations == None:
             logging.error('Could not read arlo mode.')
@@ -99,7 +109,7 @@ class ArloActivator:
                 logging.info("Setting Arlo mode to " + mode_name)
                 base.mode = mode_name
                 base.update()
-                self.emailNotify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
+                #self.emailNotify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
             else:
                 logging.debug("Mode not set")
         except TypeError:
