@@ -18,6 +18,10 @@ def __print_message():
     print('-h this message')
             
 def email_notify(subject, message):
+    '''
+    Notifies a change of state using sendmail.
+    '''
+    
     if sys.platform.startswith('linux'):
         from email.mime.text import MIMEText
         from subprocess import Popen, PIPE
@@ -48,6 +52,11 @@ class annex_activator:
         self.alarm = sectoralarm.connect(self.alarm_email, self.alarm_password, self.alarm_siteId, self.alarm_panel_code)
 
     def get_status(self):
+        '''
+        Gets status of the Alarm.
+        Returns an a dict.
+        '''
+        
         current_status = self.alarm.status()
         
         logging.debug(json.dumps(current_status))
@@ -62,6 +71,10 @@ class annex_activator:
     
     
     def get_last_event(self):
+        '''
+        Gets the latest event for the Alarm.
+        '''
+        
         last_event = ''
         try:
             event_log = self.alarm.event_log()
@@ -73,6 +86,11 @@ class annex_activator:
         return last_event
     
     def arm_annex(self, notify = False):
+        '''
+        Arms the Annex. If notify is set it will send an e-mail on
+        state change.
+        '''
+        
         try:
             self.alarm.arm_annex()
             if notify:
@@ -80,7 +98,12 @@ class annex_activator:
         except:
             logging.error('Could not arm annex.', exc_info=True)
     
-    def optionalArm(self, status, notify):
+    def optional_arm(self, status, notify):
+        '''
+        Arms the Annex. Only if the general alarm status also is 
+        'armed'.
+        '''
+        
         if (status['AlarmStatus'] == 'armed') and (status['StatusAnnex'] == 'disarmed'):
             if activator.get_last_event() == 'armed':
                 logging.info('Arming annex')
@@ -127,7 +150,7 @@ if __name__ == '__main__':
             email_notify('Reminder: annex not Armed', 'Remember to arm the Annex.')
             sys.exit(0)
         elif optional:
-            activator.optionalArm(status, notify)
+            activator.optional_arm(status, notify)
         else:
             activator.arm_annex(notify)
     except:
