@@ -8,10 +8,16 @@ import configparser
 import sys
 
 import sectoralarm
+import annex_activate
 
 
 
-class AlarmState:
+class alarm_state:
+    '''
+    Alarm state class. 
+    Consists of a dirty bit and the actual state.
+    '''
+    
     dirty = False
     state = ""
     
@@ -19,7 +25,11 @@ class AlarmState:
         self.dirty = dirty
         self.state = state
 
-class ArloActivator:
+class arlo_activator:
+    '''
+    Container class for Arlo Activator.
+    '''
+    
     def __init__(self):
         config = configparser.ConfigParser()
         config.read('config.cfg')
@@ -38,6 +48,9 @@ class ArloActivator:
         self.arlo = None
         
     def get_alarm_status(self):
+        '''
+        Returns alarm state as an alarm_state.
+        '''
         
         status_file = os.path.join(tempfile.gettempdir(), 'alarm_state')
         logging.debug('Tempfile ' + status_file)
@@ -70,14 +83,17 @@ class ArloActivator:
          
         if(current_status['AlarmStatus'] == saved_status['AlarmStatus']):
             logging.debug('Setting to not dirty.') 
-            return AlarmState(False, current_status)
+            return alarm_state(False, current_status)
         else:
             logging.debug('Setting to dirty.')       
-            return AlarmState(True, current_status)
+            return alarm_state(True, current_status)
     
     
 
     def __getArlo(self):
+        '''
+        Lazy loads Arlo.
+        '''
         if(self.arlo == None):
             from pyarlo import PyArlo
             self.arlo = PyArlo(self.arlo_email, self.arlo_password)
@@ -85,6 +101,10 @@ class ArloActivator:
         return self.arlo
 
     def get_arlo_mode(self):
+        '''
+        Returns the Arlo mode.
+        '''
+        
         arlo = self.__getArlo()
         
         if arlo == None or arlo.base_stations == None:
@@ -98,6 +118,10 @@ class ArloActivator:
         return arlo_mode
     
     def set_arlo_mode(self, mode_name):
+        ''' 
+        Sets Arlo mode to mode_name
+        '''
+        
         try:
             from pyarlo import PyArlo
             arlo  = PyArlo(self.arlo_email, self.arlo_password)
@@ -108,15 +132,15 @@ class ArloActivator:
             if arlo_mode != mode_name:
                 logging.info("Setting Arlo mode to " + mode_name)
                 base.mode = mode_name
-                base.update()
-                #self.emailNotify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
+                base.update() 
+                annex_activate.email_notify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
             else:
                 logging.debug("Mode not set")
         except TypeError:
             logging.error('Got type error. Doing nothing. ', exc_info=True)
             
 if __name__ == '__main__':
-    activator = ArloActivator()
+    activator = arlo_activator()
     
     alarm_status = 'none' 
     

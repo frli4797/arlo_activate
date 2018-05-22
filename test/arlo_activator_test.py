@@ -6,10 +6,10 @@ import json
 from unittest.mock import MagicMock
   
 
-class ArloActivatorTest(unittest.TestCase):
+class arlo_activator_test(unittest.TestCase):
     
     def setUp(self):
-        self.activator = arlo_activate.ArloActivator()
+        self.activator = arlo_activate.arlo_activator()
     
    
     def __write_disarmed(self):
