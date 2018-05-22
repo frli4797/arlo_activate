@@ -10,14 +10,14 @@ import sectoralarm
 import json
 
 
-def __printMessage():
+def __print_message():
     print('Usage: annex_activate [-f]')
     print('-f force arming of annex')
     print('-r checks if Annex is armed. If not armed sends a reminder.')
     print('-n sends notification e-mail if the annex was armed.')
     print('-h this message')
             
-def emailNotify(subject, message):
+def email_notify(subject, message):
     if sys.platform.startswith('linux'):
         from email.mime.text import MIMEText
         from subprocess import Popen, PIPE
@@ -29,7 +29,7 @@ def emailNotify(subject, message):
         p.communicate(msg.as_string().encode())
 
 
-class AnnexActivator:
+class annex_activator:
     
     def __init__(self):
 
@@ -76,7 +76,7 @@ class AnnexActivator:
         try:
             self.alarm.arm_annex()
             if notify:
-                emailNotify("Annex armed","The annex was armed.")
+                email_notify("Annex armed","The annex was armed.")
         except:
             logging.error('Could not arm annex.', exc_info=True)
     
@@ -87,7 +87,7 @@ class AnnexActivator:
                 self.arm_annex(notify)   
 
 if __name__ == '__main__':
-    activator = AnnexActivator()
+    activator = annex_activator()
 
     status = None
     
@@ -108,11 +108,11 @@ if __name__ == '__main__':
     try:
         opts, args= getopt.getopt(sys.argv[1:], 'hnfr', '')
     except getopt.GetoptError:
-        __printMessage()
+        __print_message()
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            __printMessage()
+            __print_message()
         elif opt == '-f':
             optional = False
         elif opt =='-n':
@@ -124,7 +124,7 @@ if __name__ == '__main__':
             
     try:
         if remind and activator.get_status() != 'armed':
-            emailNotify('Reminder: annex not Armed', 'Remember to arm the Annex.')
+            email_notify('Reminder: annex not Armed', 'Remember to arm the Annex.')
             sys.exit(0)
         elif optional:
             activator.optionalArm(status, notify)
