@@ -36,5 +36,5 @@ def get_arlo_mode():
      
 if __name__ == '__main__':
     get_arlo_mode()
-    set_arlo_mode('schedule')
+    set_arlo_mode('armed')
     get_arlo_mode()
