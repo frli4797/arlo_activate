@@ -31,7 +31,8 @@ def email_notify(subject, message):
         msg["Subject"] = subject
         p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
         p.communicate(msg.as_string().encode())
-
+    else:
+        logging.info('Platform is not linux. No email was sent')
 
 class annex_activator:
     
