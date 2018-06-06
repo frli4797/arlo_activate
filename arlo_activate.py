@@ -104,16 +104,22 @@ class arlo_activator:
         '''
         Returns the Arlo mode.
         '''
-        
-        arlo = self.__getArlo()
+        from pyarlo import PyArlo
+        arlo = PyArlo(self.arlo_email, self.arlo_password)
         
         if arlo == None or arlo.base_stations == None:
-            logging.error('Could not read arlo mode.')
-            return
+            logging.error('Could not read arlo base station.')
+            raise TypeError('Could not read arlo base station.')
         
         base = arlo.base_stations[0]
 
         arlo_mode = base.mode
+        
+        if arlo_mode == None:
+            logging.error('Could not read arlo mode.')
+            raise TypeError('Could not read arlo mode.')
+        
+        
         logging.info("Is mode " + arlo_mode)
         return arlo_mode
     
@@ -127,15 +133,10 @@ class arlo_activator:
             arlo  = PyArlo(self.arlo_email, self.arlo_password)
  
             base = arlo.base_stations[0]
-            arlo_mode = self.get_arlo_mode()
         
-            if arlo_mode != mode_name:
-                logging.info("Setting Arlo mode to " + mode_name)
-                base.mode = mode_name
-                base.update() 
-                annex_activate.email_notify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
-            else:
-                logging.debug("Mode not set")
+            logging.info("Setting Arlo mode to " + mode_name)
+            base.mode = mode_name
+            annex_activate.email_notify('Arlo change', 'Alarm change state. Changing state of Arlo to [' + mode_name + '].')
         except TypeError:
             logging.error('Got type error. Doing nothing. ', exc_info=True)
             

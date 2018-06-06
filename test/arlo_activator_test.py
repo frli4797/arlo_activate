@@ -5,7 +5,6 @@ import tempfile
 import json
 import time
 from unittest.mock import MagicMock
-from unittest.case import SkipTest
   
 class arlo_activator_test(unittest.TestCase):
     
@@ -41,9 +40,8 @@ class arlo_activator_test(unittest.TestCase):
         self.activator.set_arlo_mode('schedule')
         mode = self.activator.get_arlo_mode()
     
-        self.assertTrue(mode in ['schedule', 'disarmed'], 'Mode should be schedule.')
-   
-    @SkipTest()
+        self.assertTrue(mode in ['schedule'], 'Mode should be schedule.')
+
     def test_status_should_be_armed(self):
         self.activator.set_arlo_mode('armed')
         mode = self.activator.get_arlo_mode()
