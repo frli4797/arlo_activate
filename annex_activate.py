@@ -53,7 +53,7 @@ class annex_activator:
         self.alarm_siteId = config.get('Alarm', 'siteId')
         self.alarm_panel_code = config.get('Alarm', 'panel_code')
 
-        self.alarm = sectoralarm.connect(self.alarm_email, self.alarm_password, self.alarm_siteId)
+        self.alarm = sectoralarm.Connect(self.alarm_email, self.alarm_password, self.alarm_siteId, self.alarm_panel_code)
 
     def get_status(self):
         """

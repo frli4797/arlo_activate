@@ -12,7 +12,7 @@ import sectoralarm
 from requests import HTTPError
 
 
-class alarm_state:
+class AlarmState:
     """
     Alarm state class.
     Consists of a dirty bit and the actual state.
@@ -33,20 +33,21 @@ class StringifyActivator:
 
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read('config.cfg')
+        config.read('stringfy_activator.cfg')
         numeric_level = getattr(logging, config.get('Logging', 'level').upper(), None)
         log_location = config.get('Logging', 'log_location')
-        logfile = os.path.join(log_location, 'arlo_activate.log')
+        logfile = os.path.join(log_location, 'stringify_activator.log')
         logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                             filename=logfile, level=numeric_level)
         self.alarm_email = config.get('Alarm', 'email')
         self.alarm_password = config.get('Alarm', 'password')
         self.alarm_siteId = config.get('Alarm', 'siteId')
+        self.alarm_panel_code = config.get('Alarm', 'panel_code')
 
         self.activation_url = config.get('Stringify', 'activate_url')
         self.deactivation_url = config.get('Stringify', 'deactivate_url')
 
-        self.alarm = sectoralarm.connect(self.alarm_email, self.alarm_password, self.alarm_siteId)
+        self.alarm = sectoralarm.Connect(self.alarm_email, self.alarm_password, self.alarm_siteId, self.alarm_panel_code)
 
     def get_alarm_status(self):
         """
@@ -84,10 +85,10 @@ class StringifyActivator:
 
         if current_status['AlarmStatus'] == saved_status['AlarmStatus']:
             logging.debug('Setting to not dirty.')
-            return alarm_state(False, current_status)
+            return AlarmState(False, current_status)
         else:
             logging.debug('Setting to dirty.')
-            return alarm_state(True, current_status)
+            return AlarmState(True, current_status)
 
     def send_stringify(self, activation):
         """
@@ -113,7 +114,7 @@ if __name__ == '__main__':
     alarm_status = 'none'
 
     try:
-        alarm_status = StringifyActivator.get_alarm_status()
+        alarm_status = event_sender.get_alarm_status()
         logging.debug("Alarm status is " + alarm_status.state['AlarmStatus'])
     except:
         logging.error("Could not read status.", exc_info=True)
