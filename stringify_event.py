@@ -101,7 +101,7 @@ class StringifyActivator:
                 url = self.deactivation_url
 
             logging.info("Sending request to stringify " + url)
-            result = requests.get(url)
+            result = requests.post(url)
             result.raise_for_status()
 
         except HTTPError:
