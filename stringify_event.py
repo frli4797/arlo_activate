@@ -33,7 +33,7 @@ class StringifyActivator:
 
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read('stringfy_activator.cfg')
+        config.read('stringify_activator.cfg')
         numeric_level = getattr(logging, config.get('Logging', 'level').upper(), None)
         log_location = config.get('Logging', 'log_location')
         logfile = os.path.join(log_location, 'stringify_activator.log')
@@ -103,6 +103,7 @@ class StringifyActivator:
 
             logging.info("Sending request to stringify " + url)
             result = requests.post(url)
+            logging.debug("Result " + str(result.status_code) + " " + result.text)
             result.raise_for_status()
 
         except HTTPError:
